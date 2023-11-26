@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PGP Operations</title>
+    <script src="./openpgp.js"></script>
+    <script>
+      async function encryptMessage(publicKeyArmored, messageText) {
+        
+        try {
+          const publicKey = await openpgp.readKey({
+            armoredKey: publicKeyArmored,
+          });
+
+          const encrypted = await openpgp.encrypt({
+            message: await openpgp.createMessage({text: messageText}), // input as Message object
+            encryptionKeys: publicKey,
+          });
+
+          // Send the encrypted message back to React Native
+          window.ReactNativeWebView.postMessage(encrypted);
+        } catch (e) {
+            console.log('Public key:', publicKeyArmored);
+          console.error('Encryption error:', e);
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({error: e.message}),
+          );
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Your HTML content -->
+  </body>
+</html>
