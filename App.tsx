@@ -6,7 +6,6 @@
  */
 
 import React, {useEffect, useRef, useState} from 'react';
-import type {PropsWithChildren} from 'react';
 import {WebView} from 'react-native-webview';
 import {
   Button,
@@ -14,54 +13,50 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   useColorScheme,
   View,
+  TextInput,
+  Text,
+  Linking,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 function App(): JSX.Element {
+  const messageInputRef = useRef<TextInput>(null);
+  const [emailAddress, setEmailAddress] = useState('');
+  const [message, setMessage] = useState('');
+  const [debouncedEmail, setDebouncedEmail] = useState('');
   const webViewRef = useRef<WebView>(null);
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  };
+
+  const sendEmail = (to, subject, body) => {
+    let url = `mailto:${to}`;
+
+    // Create email link query
+    const query = JSON.stringify({
+      subject: subject,
+      body: body,
+    });
+
+    if (query.length) {
+      url += `?${query}`;
+    }
+
+    // Open URL
+    Linking.canOpenURL(url)
+      .then(supported => {
+        if (!supported) {
+          console.log("Can't handle url: " + url);
+        } else {
+          return Linking.openURL(url);
+        }
+      })
+      .catch(err => console.error('An error occurred', err));
   };
 
   async function fetchPublicKey(email: string): Promise<string | null> {
@@ -74,6 +69,11 @@ function App(): JSX.Element {
           },
         },
       );
+
+      if (response.status === 404) {
+        console.log('No public key found for ', email);
+        return null;
+      }
 
       if (!response.ok) {
         throw new Error(`Error fetching public key: ${response.statusText}`);
@@ -89,7 +89,6 @@ function App(): JSX.Element {
 
   const [encryptedMessage, setEncryptedMessage] = useState('');
   const [publicKey, setPublicKey] = useState('');
-  const message = 'Hello, World!';
 
   const handleMessage = (event: {nativeEvent: {data: any}}) => {
     console.log('Message received:', event.nativeEvent.data);
@@ -114,23 +113,34 @@ function App(): JSX.Element {
   };
 
   useEffect(() => {
-    if (encryptedMessage) {
-      console.log('Encrypted message:', encryptedMessage);
-    }
-  }, [encryptedMessage]);
+    console.log('Email address changed:', emailAddress);
+    const handler = setTimeout(() => {
+      setDebouncedEmail(emailAddress);
+    }, 1000); // Delay of 1000ms
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [emailAddress]);
 
   useEffect(() => {
-    const email = 'kontakt@filipstenstrom.se';
-    fetchPublicKey(email).then(publicKeys => {
-      if (publicKeys) {
-        console.log('Fetched public key');
-        //console.log('Public Key:', publicKeys);
-        setPublicKey(publicKeys);
-      } else {
-        console.log('No public key found or an error occurred.');
-      }
-    });
-  }, []);
+    if (debouncedEmail) {
+      console.log('Fetching public key for:', debouncedEmail);
+      fetchPublicKey(debouncedEmail).then(publicKeys => {
+        if (publicKeys) {
+          console.log('Fetched public key');
+          setPublicKey(publicKeys);
+        } else {
+          console.log('No public key found or an error occurred.');
+        }
+      });
+    }
+  }, [debouncedEmail]);
+
+  // Handle email input change
+  const handleEmail = (email: string) => {
+    setEmailAddress(email);
+  };
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -141,32 +151,41 @@ function App(): JSX.Element {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
-        {/* <Header /> */}
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
-          <Section title="Step One">
-            <Button title="Encrypt" onPress={encryptMessage} />
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-            <WebView
-              ref={webViewRef}
-              source={require('./openpgp.html')}
-              onMessage={handleMessage}
-              injectedJavaScript={`encryptMessage(\`${publicKey}\`, \`${message}\`); true;`}
-            />
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+          <TextInput
+            style={styles.emailInput}
+            onChangeText={email => handleEmail(email)}
+            value={emailAddress}
+            onSubmitEditing={() => messageInputRef.current?.focus()}
+            inputMode="email"
+            returnKeyType="next"
+            placeholder="Email address"
+            autoComplete="email"
+            keyboardType="email-address"
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+          <TextInput
+            ref={messageInputRef}
+            style={styles.textArea}
+            multiline
+            numberOfLines={4}
+            onChangeText={text => setMessage(text)}
+            value={message}
+            inputMode="text"
+            placeholder="Type something..."
+          />
+          <Button title="Encrypt" onPress={encryptMessage} />
+          <Text>{encryptedMessage}</Text>
+          <WebView
+            ref={webViewRef}
+            source={require('./openpgp.html')}
+            onMessage={handleMessage}
+            injectedJavaScript={`encryptMessage(\`${publicKey}\`, \`${message}\`); true;`}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -189,6 +208,19 @@ const styles = StyleSheet.create({
   },
   highlight: {
     fontWeight: '700',
+  },
+  emailInput: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    padding: 10,
+  },
+  textArea: {
+    height: 100, // Adjust the height as needed
+    justifyContent: 'flex-start',
+    borderColor: 'gray',
+    borderWidth: 1,
+    padding: 10,
   },
 });
 
