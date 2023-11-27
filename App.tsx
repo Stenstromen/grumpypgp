@@ -17,13 +17,12 @@ import {
   View,
   TextInput,
   Text,
-  Linking,
 } from 'react-native';
+import Mailer from 'react-native-mail';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 function App(): JSX.Element {
-  var Mailer = require('NativeModules').RNMail;
   const messageInputRef = useRef<TextInput>(null);
   const [emailAddress, setEmailAddress] = useState('');
   const [message, setMessage] = useState('');
@@ -35,37 +34,18 @@ function App(): JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  const sendEmail = (to: string, subject: string, body: string) => {
-    /*     let url = `mailto:${to}`;
-
-    // Create email link query
-    const query = JSON.stringify({
-      subject: subject,
-      body: body,
-    });
-
-    if (query.length) {
-      url += `?${query}`;
-    }
-
-    // Open URL
-    Linking.canOpenURL(url)
-      .then(supported => {
-        if (!supported) {
-          console.log("Can't handle url: " + url);
-        } else {
-          return Linking.openURL(url);
-        }
-      })
-      .catch(err => console.error('An error occurred', err)); */
-    Mailer.mail(
+  const sendEmail = async (to: string, subject: string, body: string) => {
+    console.log('Sending email to:', to);
+    console.log('Subject:', subject);
+    console.log('Body:', body);
+    await Mailer.mail(
       {
         subject: subject,
         recipients: [to],
         body: body,
-        isHTML: true,
+        isHTML: false,
       },
-      (error: any, event: any) => {
+      (error: any) => {
         if (error) {
           console.log('Error sending email:', error);
         } else {
@@ -155,7 +135,6 @@ function App(): JSX.Element {
     }
   }, [debouncedEmail]);
 
-  // Handle email input change
   const handleEmail = (email: string) => {
     setEmailAddress(email);
   };
