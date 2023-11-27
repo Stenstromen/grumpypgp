@@ -23,6 +23,7 @@ import {
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 function App(): JSX.Element {
+  var Mailer = require('NativeModules').RNMail;
   const messageInputRef = useRef<TextInput>(null);
   const [emailAddress, setEmailAddress] = useState('');
   const [message, setMessage] = useState('');
@@ -34,8 +35,8 @@ function App(): JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  const sendEmail = (to, subject, body) => {
-    let url = `mailto:${to}`;
+  const sendEmail = (to: string, subject: string, body: string) => {
+    /*     let url = `mailto:${to}`;
 
     // Create email link query
     const query = JSON.stringify({
@@ -56,7 +57,22 @@ function App(): JSX.Element {
           return Linking.openURL(url);
         }
       })
-      .catch(err => console.error('An error occurred', err));
+      .catch(err => console.error('An error occurred', err)); */
+    Mailer.mail(
+      {
+        subject: subject,
+        recipients: [to],
+        body: body,
+        isHTML: true,
+      },
+      (error: any, event: any) => {
+        if (error) {
+          console.log('Error sending email:', error);
+        } else {
+          console.log('Email sent successfully!');
+        }
+      },
+    );
   };
 
   async function fetchPublicKey(email: string): Promise<string | null> {
@@ -110,6 +126,8 @@ function App(): JSX.Element {
     if (webViewRef.current) {
       webViewRef.current.injectJavaScript(script);
     }
+
+    sendEmail(emailAddress, 'Encrypted message', encryptedMessage);
   };
 
   useEffect(() => {

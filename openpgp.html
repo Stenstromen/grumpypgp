@@ -14,8 +14,6 @@
             message: await openpgp.createMessage({text: messageText}), // input as Message object
             encryptionKeys: publicKey,
           });
-
-          // Send the encrypted message back to React Native
           window.ReactNativeWebView.postMessage(encrypted);
         } catch (e) {
           console.log('Public key:', publicKeyArmored);
