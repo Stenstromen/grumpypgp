@@ -1,10 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import React, {useEffect, useRef, useState} from 'react';
 import {WebView} from 'react-native-webview';
 import {
@@ -16,6 +9,7 @@ import {
   useColorScheme,
   View,
   TextInput,
+  TouchableOpacity,
   Text,
 } from 'react-native';
 import Mailer from 'react-native-mail';
@@ -24,37 +18,18 @@ import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 function App(): JSX.Element {
   const messageInputRef = useRef<TextInput>(null);
+  const webViewRef = useRef<WebView>(null);
   const [emailAddress, setEmailAddress] = useState('');
   const [message, setMessage] = useState('');
-  const [debouncedEmail, setDebouncedEmail] = useState('');
-  const webViewRef = useRef<WebView>(null);
+  const [publicKey, setPublicKey] = useState('');
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    color: isDarkMode ? Colors.lighter : Colors.darker,
   };
 
-  const sendEmail = async (to: string, subject: string, body: string) => {
-    console.log('Sending email to:', to);
-    console.log('Subject:', subject);
-    console.log('Body:', body);
-    await Mailer.mail(
-      {
-        subject: subject,
-        recipients: [to],
-        body: body,
-        isHTML: false,
-      },
-      (error: any) => {
-        if (error) {
-          console.log('Error sending email:', error);
-        } else {
-          console.log('Email sent successfully!');
-        }
-      },
-    );
-  };
-
+  // Function to fetch public key
   async function fetchPublicKey(email: string): Promise<string | null> {
     try {
       const response = await fetch(
@@ -83,64 +58,65 @@ function App(): JSX.Element {
     }
   }
 
-  const [encryptedMessage, setEncryptedMessage] = useState('');
-  const [publicKey, setPublicKey] = useState('');
-
-  const handleMessage = (event: {nativeEvent: {data: any}}) => {
-    console.log('Message received:', event.nativeEvent.data);
-    const data = event.nativeEvent.data;
-    try {
-      const parsedData = JSON.parse(data);
-      if (parsedData.error) {
-        console.error('Encryption error:', parsedData.error);
-      } else {
-        setEncryptedMessage(parsedData);
-      }
-    } catch (e) {
-      setEncryptedMessage(data);
-    }
-  };
-
-  const encryptMessage = () => {
-    const script = `encryptMessage(\`${publicKey}\`, \`${message}\`); true;`; // Adding true; to ensure the script returns something
-    if (webViewRef.current) {
-      webViewRef.current.injectJavaScript(script);
-    }
-
-    sendEmail(emailAddress, 'Encrypted message', encryptedMessage);
-  };
-
   useEffect(() => {
-    console.log('Email address changed:', emailAddress);
     const handler = setTimeout(() => {
-      setDebouncedEmail(emailAddress);
-    }, 1000); // Delay of 1000ms
+      if (emailAddress) {
+        console.log('Fetching public key for:', emailAddress);
+        fetchPublicKey(emailAddress).then(key => {
+          if (key) {
+            console.log('Fetched public key');
+            setPublicKey(key);
+          } else {
+            console.log('No public key found or an error occurred.');
+          }
+        });
+      }
+    }, 1500);
 
     return () => {
       clearTimeout(handler);
     };
   }, [emailAddress]);
 
-  useEffect(() => {
-    if (debouncedEmail) {
-      console.log('Fetching public key for:', debouncedEmail);
-      fetchPublicKey(debouncedEmail).then(publicKeys => {
-        if (publicKeys) {
-          console.log('Fetched public key');
-          setPublicKey(publicKeys);
-        } else {
-          console.log('No public key found or an error occurred.');
-        }
-      });
-    }
-  }, [debouncedEmail]);
+  const encryptAndPrepareEmail = async () => {
+    const script = `encryptMessage(\`${publicKey}\`, \`${message}\`); true;`;
+    webViewRef.current?.injectJavaScript(script);
+  };
 
-  const handleEmail = (email: string) => {
-    setEmailAddress(email);
+  const handleMessage = (event: {nativeEvent: {data: any}}) => {
+    console.log('Message received:', event.nativeEvent.data);
+    const data = event.nativeEvent.data;
+    try {
+      if (data.startsWith('-----BEGIN PGP MESSAGE-----')) {
+        sendEmail(emailAddress, 'Encrypted message', data);
+      } else {
+        console.error('Received data is not a valid PGP message:', data);
+      }
+    } catch (e) {
+      console.error('Error parsing message:', e);
+    }
+  };
+
+  const sendEmail = (to: string, subject: string, body: string) => {
+    Mailer.mail(
+      {
+        subject: subject,
+        recipients: [to],
+        body: body,
+        isHTML: false,
+      },
+      (error: any) => {
+        if (error) {
+          console.log('Error sending email:', error);
+        } else {
+          console.log('Email sent successfully!');
+        }
+      },
+    );
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
+    <SafeAreaView style={[styles.safeAreaView, backgroundStyle]}>
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
@@ -148,17 +124,12 @@ function App(): JSX.Element {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
+        <View style={[backgroundStyle, styles.container]}>
           <TextInput
-            style={styles.emailInput}
-            onChangeText={email => handleEmail(email)}
+            style={[backgroundStyle, styles.emailInput]}
+            onChangeText={email => setEmailAddress(email)}
             value={emailAddress}
             onSubmitEditing={() => messageInputRef.current?.focus()}
-            inputMode="email"
-            returnKeyType="next"
             placeholder="Email address"
             autoComplete="email"
             keyboardType="email-address"
@@ -167,57 +138,73 @@ function App(): JSX.Element {
           />
           <TextInput
             ref={messageInputRef}
-            style={styles.textArea}
+            style={[backgroundStyle, styles.textArea]}
             multiline
             numberOfLines={4}
             onChangeText={text => setMessage(text)}
             value={message}
-            inputMode="text"
-            placeholder="Type something..."
+            placeholder="Type your message"
           />
-          <Button title="Encrypt" onPress={encryptMessage} />
-          <Text>{encryptedMessage}</Text>
           <WebView
             ref={webViewRef}
             source={require('./openpgp.html')}
             onMessage={handleMessage}
-            injectedJavaScript={`encryptMessage(\`${publicKey}\`, \`${message}\`); true;`}
+            javaScriptEnabled
           />
         </View>
       </ScrollView>
+      <View style={styles.buttonView}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={encryptAndPrepareEmail}>
+          <Text style={styles.button}>Encrypt and Send</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  safeAreaView: {
+    flex: 1, // Make sure SafeAreaView fills the screen
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  container: {
+    flex: 1, // Use flex to enable flexible layout
+    justifyContent: 'space-between', // Aligns children at the start and end of the container
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+  buttonContainer: {
+    paddingBottom: 20, // Add some padding at the bottom
+    paddingHorizontal: 10, // Padding on the sides for aesthetic spacing
   },
   emailInput: {
     height: 40,
     borderColor: 'gray',
     borderWidth: 1,
     padding: 10,
+    margin: 10,
+    borderRadius: 5,
   },
   textArea: {
-    height: 100, // Adjust the height as needed
-    justifyContent: 'flex-start',
+    height: 300,
     borderColor: 'gray',
     borderWidth: 1,
     padding: 10,
+    margin: 10,
+    borderRadius: 5,
+  },
+  encryptedMessage: {
+    margin: 10,
+    padding: 10,
+    borderColor: 'gray',
+    borderWidth: 1,
+  },
+  buttonView: {
+    padding: 10, // Add padding for aesthetic spacing
+    borderColor: 'gray', // Optional, color for the line above the button
+  },
+  button: {
+    borderRadius: 5, // Optional, adds rounded corners to buttons
+    backgroundColor: 'blue', // Optional, color for the button background
   },
 });
 
