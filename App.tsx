@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unstable-nested-components */
 import React, {useEffect, useRef, useState} from 'react';
 import {WebView} from 'react-native-webview';
 import {
@@ -11,12 +12,48 @@ import {
   TextInput,
   TouchableOpacity,
   Text,
+  TouchableWithoutFeedback,
 } from 'react-native';
+import SwipeUpDown from 'react-native-swipe-up-down';
 import Mailer from 'react-native-mail';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
+function ItemFull({
+  isDarkMode,
+  message,
+  setMessage,
+  encryptAndPrepareEmail,
+}: {
+  isDarkMode: boolean;
+  message: string;
+  setMessage: (message: string) => void;
+  encryptAndPrepareEmail: () => void;
+}) {
+  const backgroundStyle = {
+    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    color: isDarkMode ? Colors.lighter : Colors.darker,
+    borderColor: isDarkMode ? Colors.lighter : Colors.darker,
+  };
+  return (
+    <View>
+      <TouchableOpacity style={styles.button} onPress={encryptAndPrepareEmail}>
+        <Text style={styles.buttonText}>Encrypt and Send</Text>
+      </TouchableOpacity>
+      <TextInput
+        style={[backgroundStyle, styles.textArea]}
+        multiline
+        numberOfLines={4}
+        onChangeText={text => setMessage(text)}
+        value={message}
+        placeholder="Type your message"
+      />
+    </View>
+  );
+}
+
 function App(): JSX.Element {
+  const swipeUpDownRef = useRef();
   const messageInputRef = useRef<TextInput>(null);
   const webViewRef = useRef<WebView>(null);
   const [emailAddress, setEmailAddress] = useState('');
@@ -27,10 +64,15 @@ function App(): JSX.Element {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
     color: isDarkMode ? Colors.lighter : Colors.darker,
+    borderColor: isDarkMode ? Colors.lighter : Colors.darker,
   };
 
   // Function to fetch public key
   async function fetchPublicKey(email: string): Promise<string | null> {
+    if (!validateEmail(email)) {
+      console.log('(validateEmail) Invalid email address:', email);
+      return null;
+    }
     try {
       const response = await fetch(
         `https://keys.openpgp.org/vks/v1/by-email/${encodeURIComponent(email)}`,
@@ -42,7 +84,7 @@ function App(): JSX.Element {
       );
 
       if (response.status === 404) {
-        console.log('No public key found for ', email);
+        console.log('(404) No public key found for ', email);
         return null;
       }
 
@@ -53,9 +95,14 @@ function App(): JSX.Element {
       const key = await response.text();
       return key;
     } catch (error) {
-      console.error('Error fetching public key:', error);
+      console.error('(catch statement) Error fetching public key:', error);
       return null;
     }
+  }
+
+  function validateEmail(email: string): boolean {
+    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    return regex.test(email);
   }
 
   useEffect(() => {
@@ -79,8 +126,10 @@ function App(): JSX.Element {
   }, [emailAddress]);
 
   const encryptAndPrepareEmail = async () => {
+    console.log('Encrypting message:', message);
     const script = `encryptMessage(\`${publicKey}\`, \`${message}\`); true;`;
     webViewRef.current?.injectJavaScript(script);
+    swipeUpDownRef.current.showMini();
   };
 
   const handleMessage = (event: {nativeEvent: {data: any}}) => {
@@ -136,7 +185,7 @@ function App(): JSX.Element {
             autoCorrect={false}
             autoCapitalize="none"
           />
-          <TextInput
+          {/*           <TextInput
             ref={messageInputRef}
             style={[backgroundStyle, styles.textArea]}
             multiline
@@ -144,7 +193,7 @@ function App(): JSX.Element {
             onChangeText={text => setMessage(text)}
             value={message}
             placeholder="Type your message"
-          />
+          /> */}
           <WebView
             ref={webViewRef}
             source={require('./openpgp.html')}
@@ -152,14 +201,43 @@ function App(): JSX.Element {
             javaScriptEnabled
           />
         </View>
+        <View style={styles.buttonView}>
+          <Button
+            title="Open"
+            onPress={() => swipeUpDownRef.current.showFull()}
+          />
+        </View>
+        <TouchableWithoutFeedback>
+          <SwipeUpDown
+            //itemMini={show => <ItemFull show={show} />}
+            // eslint-disable-next-line react/no-unstable-nested-components
+            ref={swipeUpDownRef}
+            itemFull={() => (
+              <ItemFull
+                isDarkMode={isDarkMode}
+                message={message}
+                setMessage={setMessage}
+                encryptAndPrepareEmail={encryptAndPrepareEmail}
+              />
+            )}
+            /* onShowMini={() => console.log('mini')}
+        onShowFull={() => console.log('full')} */
+            animation="spring"
+            disableSwipeIcon
+            extraMarginTop={100}
+            //iconColor="yellow"
+            //iconSize={30}
+            style={{backgroundColor: 'green'}} // style for swipe
+          />
+        </TouchableWithoutFeedback>
       </ScrollView>
-      <View style={styles.buttonView}>
+      {/*       <View style={styles.buttonView}>
         <TouchableOpacity
           style={styles.button}
           onPress={encryptAndPrepareEmail}>
           <Text style={styles.button}>Encrypt and Send</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 }
@@ -186,11 +264,15 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 300,
-    borderColor: 'gray',
-    borderWidth: 1,
+    //borderColor: 'black',
+    borderTopWidth: 0,
+    borderBottomWidth: 0,
+    borderLeftWidth: 3,
+    borderRightWidth: 3,
     padding: 10,
     margin: 10,
-    borderRadius: 5,
+    //borderTop: 0,
+    //borderRadius: 5,
   },
   encryptedMessage: {
     margin: 10,
@@ -199,12 +281,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   buttonView: {
-    padding: 10, // Add padding for aesthetic spacing
-    borderColor: 'gray', // Optional, color for the line above the button
+    padding: 10,
+    alignItems: 'flex-end', // Aligns button to the right
   },
   button: {
-    borderRadius: 5, // Optional, adds rounded corners to buttons
-    backgroundColor: 'blue', // Optional, color for the button background
+    backgroundColor: '#2196F3',
+    paddingHorizontal: 20, // Horizontal padding
+    paddingVertical: 10, // Vertical padding
+    borderRadius: 25, // Rounded corners
+    borderWidth: 1, // Border width
+    borderColor: '#ccc', // Border color
+    alignSelf: 'flex-end', // Align the button to the right
+  },
+  buttonText: {
+    color: 'white', // Text color for the button
+    textAlign: 'center', // Center the text inside the button
   },
 });
 
