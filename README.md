@@ -1,5 +1,11 @@
 # GrumpyPGP
 
+React Native app for sending encrypted messages using PGP.
+
+The lack of a good PGP app for iOS makes the cat grumpy.
+
+*PGP is a standard for encrypting messages using public key cryptography. It's a great way to send secure messages to people without having to worry about the security of the channel you're using to send the message. It's also a great way to store encrypted messages in a database, since the messages can only be decrypted by the intended recipient.*
+
 ## Light Mode Palette
 
 * Warm Gray (Lighter): #C0BEBD - A lighter, softer gray for a gentle feel.

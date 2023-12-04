@@ -2,7 +2,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {WebView} from 'react-native-webview';
 import {
-  Button,
+  Animated,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -16,8 +16,11 @@ import SwipeUpDown from 'react-native-swipe-up-down';
 import FetchPublicKey from './Util/FetchGPG';
 import SendEmail from './Util/SendEmail';
 import MessageBody from './Components/MessageBody';
+import EmailAddressInput from './Components/EmailAddress';
+import MessageButton from './Components/MessageButton';
 
 function App(): JSX.Element {
+  const [slideAnim] = useState(new Animated.Value(-200));
   const swipeUpDownRef = useRef<any>();
   const messageInputRef = useRef<TextInput>(null);
   const webViewRef = useRef<WebView>(null);
@@ -53,6 +56,21 @@ function App(): JSX.Element {
     };
   }, [emailAddress]);
 
+  useEffect(() => {
+    slideUp();
+  });
+
+  const slideUp = () => {
+    Animated.timing(
+      slideAnim, // The animated value to drive
+      {
+        toValue: 0, // Animate to final position (0 means on-screen)
+        duration: 500, // Duration of the animation
+        useNativeDriver: true, // Use native driver for better performance
+      },
+    ).start();
+  };
+
   const encryptAndPrepareEmail = async () => {
     console.log('Encrypting message:', message);
     const script = `encryptMessage(\`${publicKey}\`, \`${message}\`); true;`;
@@ -74,8 +92,6 @@ function App(): JSX.Element {
     }
   };
 
-  //const handleMessagePopup
-
   return (
     <SafeAreaView style={[styles.safeAreaView, backgroundStyle]}>
       <StatusBar
@@ -86,17 +102,19 @@ function App(): JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
         <View style={[backgroundStyle, styles.container]}>
-          <TextInput
-            style={[backgroundStyle, styles.emailInput]}
-            onChangeText={email => setEmailAddress(email)}
-            value={emailAddress}
-            onSubmitEditing={() => messageInputRef.current?.focus()}
-            placeholder="Email address"
-            autoComplete="email"
-            keyboardType="email-address"
-            autoCorrect={false}
-            autoCapitalize="none"
-          />
+          <Animated.View
+            style={{
+              ...styles.emailInputContainer,
+              transform: [{translateY: slideAnim}], // Apply the animated value
+            }}>
+            <EmailAddressInput
+              isDarkMode={isDarkMode}
+              value={emailAddress}
+              onChangeText={email => setEmailAddress(email)}
+              onSubmitEditing={() => messageInputRef.current?.focus()}
+              placeholder="Email address"
+            />
+          </Animated.View>
           <WebView
             ref={webViewRef}
             source={require('./openpgp.html')}
@@ -105,9 +123,8 @@ function App(): JSX.Element {
           />
         </View>
         <View style={styles.buttonView}>
-          <Button
-            title="Open"
-            onPress={() => swipeUpDownRef.current.showFull()}
+          <MessageButton
+            swipeUpDownRef={() => swipeUpDownRef.current.showFull()}
           />
         </View>
         <TouchableWithoutFeedback>
@@ -136,17 +153,12 @@ const styles = StyleSheet.create({
   safeAreaView: {
     flex: 1,
   },
+  emailInputContainer: {
+    marginTop: 300,
+  },
   container: {
     flex: 1,
     justifyContent: 'space-between',
-  },
-  emailInput: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    padding: 10,
-    margin: 10,
-    borderRadius: 5,
   },
   buttonView: {
     padding: 10,

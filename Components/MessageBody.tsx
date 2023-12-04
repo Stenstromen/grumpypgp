@@ -8,7 +8,7 @@ import React, {
 } from 'react-native';
 
 interface Styles {
-  textArea: ViewStyle | TextStyle;
+  textArea: ViewStyle;
   button: ViewStyle;
   buttonText: TextStyle;
 }
@@ -32,44 +32,24 @@ function MessageBody({
       borderBottomWidth: 0,
       borderLeftWidth: 3,
       borderRightWidth: 3,
-      padding: 15,
+      padding: 10,
       margin: 10,
-      borderRadius: 15,
-      fontFamily: 'System',
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 1,
-      },
-      shadowOpacity: 0.22,
-      shadowRadius: 2.22,
-      elevation: 3,
-      fontSize: 16,
+      borderRadius: 10,
     },
     button: {
       marginTop: 10,
-      marginRight: 15,
+      marginRight: 10,
       backgroundColor: '#2196F3',
       paddingHorizontal: 20,
       paddingVertical: 10,
-      borderRadius: 15,
+      borderRadius: 25,
       borderWidth: 1,
       borderColor: '#ccc',
       alignSelf: 'flex-end',
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 1,
-      },
-      shadowOpacity: 0.22,
-      shadowRadius: 2.22,
-      elevation: 3,
     },
     buttonText: {
       color: 'white',
       textAlign: 'center',
-      fontWeight: '600',
-      fontSize: 16,
     },
   };
   return (
