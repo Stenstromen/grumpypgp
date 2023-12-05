@@ -9,12 +9,12 @@ import {
   StyleSheet,
   useColorScheme,
   View,
-  TextInput,
   TouchableWithoutFeedback,
+  Image,
   Text,
-  ActivityIndicator,
 } from 'react-native';
 import SwipeUpDown from 'react-native-swipe-up-down';
+import catImage from './assets/cat.png';
 import FetchPublicKey from './Util/FetchGPG';
 import SendEmail from './Util/SendEmail';
 import MessageBody from './Components/MessageBody';
@@ -24,7 +24,6 @@ import MessageButton from './Components/MessageButton';
 function App(): JSX.Element {
   const [slideAnim] = useState(new Animated.Value(-200));
   const swipeUpDownRef = useRef<any>();
-  const messageInputRef = useRef<TextInput>(null);
   const webViewRef = useRef<WebView>(null);
   const [emailAddress, setEmailAddress] = useState('');
   const [message, setMessage] = useState('');
@@ -85,6 +84,7 @@ function App(): JSX.Element {
     const script = `encryptMessage(\`${publicKey}\`, \`${message}\`); true;`;
     webViewRef.current?.injectJavaScript(script);
     swipeUpDownRef.current?.showMini();
+    setMessage('');
   };
 
   const handleMessage = (event: {nativeEvent: {data: any}}) => {
@@ -111,22 +111,25 @@ function App(): JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
         <View style={[backgroundStyle, styles.container]}>
+          <Image style={styles.image} source={catImage} />
+          <View style={styles.homeTextContainer}>
+            <Text style={styles.homeText}>
+              Enter a PGP Enabled Email Address to Get Started
+            </Text>
+            <Text style={styles.homeText}>- GrumpyPGPCat</Text>
+          </View>
           <Animated.View
             style={{
-              ...styles.emailInputContainer,
-              transform: [{translateY: slideAnim}], // Apply the animated value
+              transform: [{translateY: slideAnim}],
             }}>
-            <Text>
-              {emailHasPGPKey}{' '}
-              {emailHasPGPKey === 'searching' && (
-                <ActivityIndicator color="#0000ff" />
-              )}
-            </Text>
             <EmailAddressInput
+              isLoading={emailHasPGPKey === 'searching'}
+              disabled={emailHasPGPKey !== 'yes'}
+              gpgFound={emailHasPGPKey === 'yes'}
               isDarkMode={isDarkMode}
               value={emailAddress}
               onChangeText={email => setEmailAddress(email)}
-              onSubmitEditing={() => messageInputRef.current?.focus()}
+              swipeUpDownRef={() => swipeUpDownRef.current.showFull()}
               placeholder="Email address"
             />
           </Animated.View>
@@ -139,6 +142,7 @@ function App(): JSX.Element {
         </View>
         <View style={styles.buttonView}>
           <MessageButton
+            disabled={emailHasPGPKey !== 'yes'}
             swipeUpDownRef={() => swipeUpDownRef.current.showFull()}
           />
         </View>
@@ -168,11 +172,21 @@ const styles = StyleSheet.create({
   safeAreaView: {
     flex: 1,
   },
-  emailInputContainer: {
-    marginTop: 300,
+  image: {
+    alignSelf: 'center',
+    width: 310,
+    height: 310,
+  },
+  homeTextContainer: {
+    paddingTop: 20,
+    paddingBottom: 10,
+    alignItems: 'center',
+  },
+  homeText: {
+    fontSize: 15,
+    fontWeight: 'bold',
   },
   container: {
-    flex: 1,
     justifyContent: 'space-between',
   },
   buttonView: {

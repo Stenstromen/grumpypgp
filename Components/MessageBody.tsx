@@ -11,6 +11,8 @@ interface Styles {
   textArea: ViewStyle;
   button: ViewStyle;
   buttonText: TextStyle;
+  headerContainer: ViewStyle;
+  headerText: TextStyle;
 }
 
 function MessageBody({
@@ -49,16 +51,35 @@ function MessageBody({
     },
     buttonText: {
       color: 'white',
+      fontSize: 18,
       textAlign: 'center',
+      fontWeight: 'bold',
+    },
+    headerContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      marginTop: 10,
+    },
+    headerText: {
+      color: isDarkMode ? '#FFFFFF' : '#000000',
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginLeft: 5,
     },
   };
   return (
     <View>
-      <TouchableOpacity
-        style={textAreaStyle.button}
-        onPress={encryptAndPrepareEmail}>
-        <Text style={textAreaStyle.buttonText}>Send 🔏</Text>
-      </TouchableOpacity>
+      <View style={textAreaStyle.headerContainer}>
+        <Text style={textAreaStyle.headerText}>Message to Encrypt</Text>
+        <TouchableOpacity
+          disabled={message.length === 0}
+          style={textAreaStyle.button}
+          onPress={encryptAndPrepareEmail}>
+          <Text style={textAreaStyle.buttonText}>Send 🔏</Text>
+        </TouchableOpacity>
+      </View>
       <TextInput
         style={textAreaStyle.textArea}
         multiline
