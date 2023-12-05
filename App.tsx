@@ -11,6 +11,8 @@ import {
   View,
   TextInput,
   TouchableWithoutFeedback,
+  Text,
+  ActivityIndicator,
 } from 'react-native';
 import SwipeUpDown from 'react-native-swipe-up-down';
 import FetchPublicKey from './Util/FetchGPG';
@@ -27,6 +29,9 @@ function App(): JSX.Element {
   const [emailAddress, setEmailAddress] = useState('');
   const [message, setMessage] = useState('');
   const [publicKey, setPublicKey] = useState('');
+  const [emailHasPGPKey, setEmailHasPGPKey] = useState<
+    'yes' | 'no' | 'searching' | 'standby'
+  >('standby');
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
@@ -39,12 +44,15 @@ function App(): JSX.Element {
   useEffect(() => {
     const handler = setTimeout(() => {
       if (emailAddress) {
+        setEmailHasPGPKey('searching');
         console.log('Fetching public key for:', emailAddress);
         FetchPublicKey(emailAddress).then(key => {
           if (key) {
             console.log('Fetched public key');
+            setEmailHasPGPKey('yes');
             setPublicKey(key);
           } else {
+            setEmailHasPGPKey('no');
             console.log('No public key found or an error occurred.');
           }
         });
@@ -52,6 +60,7 @@ function App(): JSX.Element {
     }, 1500);
 
     return () => {
+      setEmailHasPGPKey('standby');
       clearTimeout(handler);
     };
   }, [emailAddress]);
@@ -107,6 +116,12 @@ function App(): JSX.Element {
               ...styles.emailInputContainer,
               transform: [{translateY: slideAnim}], // Apply the animated value
             }}>
+            <Text>
+              {emailHasPGPKey}{' '}
+              {emailHasPGPKey === 'searching' && (
+                <ActivityIndicator color="#0000ff" />
+              )}
+            </Text>
             <EmailAddressInput
               isDarkMode={isDarkMode}
               value={emailAddress}
