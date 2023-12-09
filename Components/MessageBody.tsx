@@ -1,19 +1,11 @@
 import React, {
+  Keyboard,
   Text,
   TextInput,
-  TextStyle,
   TouchableOpacity,
   View,
-  ViewStyle,
 } from 'react-native';
-
-interface Styles {
-  textArea: ViewStyle;
-  button: ViewStyle;
-  buttonText: TextStyle;
-  headerContainer: ViewStyle;
-  headerText: TextStyle;
-}
+import {MessageBodyStyles} from '../Types';
 
 function MessageBody({
   isDarkMode,
@@ -26,7 +18,7 @@ function MessageBody({
   setMessage: (message: string) => void;
   encryptAndPrepareEmail: () => void;
 }) {
-  const textAreaStyle: Styles = {
+  const textAreaStyle: MessageBodyStyles = {
     textArea: {
       backgroundColor: isDarkMode ? '#E1E1E1' : '#FFFFFF',
       height: 300,
@@ -69,6 +61,10 @@ function MessageBody({
       marginLeft: 5,
     },
   };
+  const handlePress = () => {
+    Keyboard.dismiss();
+    encryptAndPrepareEmail();
+  };
   return (
     <View>
       <View style={textAreaStyle.headerContainer}>
@@ -76,7 +72,7 @@ function MessageBody({
         <TouchableOpacity
           disabled={message.length === 0}
           style={textAreaStyle.button}
-          onPress={encryptAndPrepareEmail}>
+          onPress={handlePress}>
           <Text style={textAreaStyle.buttonText}>Send 🔏</Text>
         </TouchableOpacity>
       </View>

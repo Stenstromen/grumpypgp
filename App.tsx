@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   Image,
   Text,
+  Keyboard,
 } from 'react-native';
 import SwipeUpDown from 'react-native-swipe-up-down';
 import catImage from './assets/cat.png';
@@ -20,17 +21,17 @@ import SendEmail from './Util/SendEmail';
 import MessageBody from './Components/MessageBody';
 import EmailAddressInput from './Components/EmailAddress';
 import MessageButton from './Components/MessageButton';
+import {EmailHasPGPKeyType} from './Types';
 
 function App(): JSX.Element {
   const [slideAnim] = useState(new Animated.Value(-200));
   const swipeUpDownRef = useRef<any>();
   const webViewRef = useRef<WebView>(null);
-  const [emailAddress, setEmailAddress] = useState('');
-  const [message, setMessage] = useState('');
-  const [publicKey, setPublicKey] = useState('');
-  const [emailHasPGPKey, setEmailHasPGPKey] = useState<
-    'yes' | 'no' | 'searching' | 'standby'
-  >('standby');
+  const [emailAddress, setEmailAddress] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
+  const [publicKey, setPublicKey] = useState<string>('');
+  const [emailHasPGPKey, setEmailHasPGPKey] =
+    useState<EmailHasPGPKeyType>('standby');
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
@@ -69,14 +70,11 @@ function App(): JSX.Element {
   });
 
   const slideUp = () => {
-    Animated.timing(
-      slideAnim, // The animated value to drive
-      {
-        toValue: 0, // Animate to final position (0 means on-screen)
-        duration: 500, // Duration of the animation
-        useNativeDriver: true, // Use native driver for better performance
-      },
-    ).start();
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
   };
 
   const encryptAndPrepareEmail = async () => {
@@ -108,6 +106,7 @@ function App(): JSX.Element {
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView
+        keyboardShouldPersistTaps="handled"
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
         <View style={[backgroundStyle, styles.container]}>
@@ -126,6 +125,7 @@ function App(): JSX.Element {
               isLoading={emailHasPGPKey === 'searching'}
               disabled={emailHasPGPKey !== 'yes'}
               gpgFound={emailHasPGPKey === 'yes'}
+              notFound={emailHasPGPKey === 'no'}
               isDarkMode={isDarkMode}
               value={emailAddress}
               onChangeText={email => setEmailAddress(email)}
@@ -146,7 +146,7 @@ function App(): JSX.Element {
             swipeUpDownRef={() => swipeUpDownRef.current.showFull()}
           />
         </View>
-        <TouchableWithoutFeedback>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <SwipeUpDown
             ref={swipeUpDownRef}
             itemFull={() => (

@@ -1,29 +1,12 @@
 import React from 'react';
-import {ActivityIndicator, TextInput, View} from 'react-native';
-
-interface Styles {
-  emailInput: {
-    height: number;
-    borderColor: string;
-    borderWidth: number;
-    padding: number;
-    margin: number;
-    borderRadius: number;
-    backgroundColor: string;
-    fontWeight: 'bold';
-    color: string;
-  };
-  spinner: {
-    position: 'absolute';
-    right: number;
-    height: number;
-  };
-}
+import {ActivityIndicator, Text, TextInput, View} from 'react-native';
+import {EmailAddressStyles} from '../Types';
 
 function EmailAddressInput({
   isLoading,
   disabled,
   gpgFound,
+  notFound,
   isDarkMode,
   value,
   onChangeText,
@@ -33,13 +16,14 @@ function EmailAddressInput({
   isLoading: boolean;
   disabled: boolean;
   gpgFound: boolean;
+  notFound: boolean;
   isDarkMode: boolean;
   value: string;
   onChangeText: (text: string) => void;
   swipeUpDownRef: () => void;
   placeholder: string;
 }) {
-  const style: Styles = {
+  const style: EmailAddressStyles = {
     emailInput: {
       height: 40,
       borderWidth: 2,
@@ -55,6 +39,12 @@ function EmailAddressInput({
       position: 'absolute',
       right: 20,
       height: 60,
+    },
+    ok: {
+      position: 'absolute',
+      right: 20,
+      top: 14,
+      fontSize: 25,
     },
   };
   return (
@@ -79,6 +69,8 @@ function EmailAddressInput({
           color="#0000ff" // or any color you prefer
         />
       )}
+      {gpgFound && !disabled && <Text style={style.ok}>✅</Text>}
+      {notFound && <Text style={style.ok}>❌</Text>}
     </View>
   );
 }

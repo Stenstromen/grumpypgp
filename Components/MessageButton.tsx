@@ -1,25 +1,6 @@
 import React from 'react';
 import {TouchableOpacity, Text} from 'react-native';
-
-interface Styles {
-  iosButton: {
-    backgroundColor: string;
-    paddingVertical: number;
-    paddingHorizontal: number;
-    borderRadius: number;
-    shadowColor: string;
-    shadowOffset: {width: number; height: number};
-    shadowOpacity: number;
-    shadowRadius: number;
-    elevation: number;
-  };
-  iosButtonText: {
-    color: string;
-    fontSize: number;
-    fontWeight: '600'; // Corrected to be a specific allowed value
-    textAlign: 'center'; // You can also specify 'left', 'right', 'justify'
-  };
-}
+import {MessageButtonStyles} from '../Types';
 
 function MessageButton({
   disabled,
@@ -28,7 +9,7 @@ function MessageButton({
   disabled: boolean;
   swipeUpDownRef: () => void;
 }) {
-  const styles: Styles = {
+  const styles: MessageButtonStyles = {
     iosButton: {
       backgroundColor: disabled ? 'gray' : '#007AFF', // iOS blue color
       paddingVertical: 10,
