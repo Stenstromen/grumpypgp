@@ -37,12 +37,12 @@ function EmailAddressInput({
     },
     spinner: {
       position: 'absolute',
-      right: 20,
+      right: 35,
       height: 60,
     },
     ok: {
       position: 'absolute',
-      right: 20,
+      right: 35,
       top: 14,
       fontSize: 25,
     },
@@ -61,6 +61,7 @@ function EmailAddressInput({
         autoCorrect={false}
         autoCapitalize="none"
         returnKeyType="next"
+        clearButtonMode="while-editing"
       />
       {isLoading && (
         <ActivityIndicator
