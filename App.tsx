@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unstable-nested-components */
 import React, {useEffect, useRef, useState} from 'react';
 import {WebView} from 'react-native-webview';
@@ -29,11 +30,6 @@ import MessageButton from './Components/MessageButton';
 import {EmailHasPGPKeyType} from './Types';
 
 function App(): JSX.Element {
-  MobileAds()
-    .initialize()
-    .then(() => {
-      console.log('Initialized');
-    });
   const adUnitId = 'ca-app-pub-3571877886198893/1120744041';
   const [slideAnim] = useState(new Animated.Value(-200));
   const swipeUpDownRef = useRef<any>();
@@ -75,8 +71,13 @@ function App(): JSX.Element {
   }, [emailAddress]);
 
   useEffect(() => {
+    MobileAds()
+      .initialize()
+      .then(() => {
+        console.log('Initialized');
+      });
     slideUp();
-  });
+  }, []);
 
   const slideUp = () => {
     Animated.timing(slideAnim, {
