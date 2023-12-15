@@ -16,7 +16,6 @@
           });
           window.ReactNativeWebView.postMessage(encrypted);
         } catch (e) {
-          console.log('Public key:', publicKeyArmored);
           console.error('Encryption error:', e);
           window.ReactNativeWebView.postMessage(
             JSON.stringify({error: e.message}),

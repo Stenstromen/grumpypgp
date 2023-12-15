@@ -56,7 +56,6 @@ function App(): JSX.Element {
     const handler = setTimeout(() => {
       if (emailAddress) {
         setEmailHasPGPKey('searching');
-        console.log('Fetching public key for:', emailAddress);
         FetchPublicKey(emailAddress).then(key => {
           if (key) {
             console.log('Fetched public key');
@@ -64,7 +63,6 @@ function App(): JSX.Element {
             setPublicKey(key);
           } else {
             setEmailHasPGPKey('no');
-            console.log('No public key found or an error occurred.');
           }
         });
       }
@@ -89,7 +87,6 @@ function App(): JSX.Element {
   };
 
   const encryptAndPrepareEmail = async () => {
-    console.log('Encrypting message:', message);
     const script = `encryptMessage(\`${publicKey}\`, \`${message}\`); true;`;
     webViewRef.current?.injectJavaScript(script);
     swipeUpDownRef.current?.showMini();
@@ -97,7 +94,6 @@ function App(): JSX.Element {
   };
 
   const handleMessage = (event: {nativeEvent: {data: any}}) => {
-    console.log('Message received:', event.nativeEvent.data);
     const data = event.nativeEvent.data;
     try {
       if (data.startsWith('-----BEGIN PGP MESSAGE-----')) {
