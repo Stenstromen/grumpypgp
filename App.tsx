@@ -15,6 +15,11 @@ import {
   Keyboard,
 } from 'react-native';
 import SwipeUpDown from 'react-native-swipe-up-down';
+import {
+  MobileAds,
+  BannerAd,
+  BannerAdSize,
+} from 'react-native-google-mobile-ads';
 import catImage from './assets/cat.png';
 import FetchPublicKey from './Util/FetchGPG';
 import SendEmail from './Util/SendEmail';
@@ -24,6 +29,12 @@ import MessageButton from './Components/MessageButton';
 import {EmailHasPGPKeyType} from './Types';
 
 function App(): JSX.Element {
+  MobileAds()
+    .initialize()
+    .then(() => {
+      console.log('Initialized');
+    });
+  const adUnitId = 'ca-app-pub-3571877886198893/1120744041';
   const [slideAnim] = useState(new Animated.Value(-200));
   const swipeUpDownRef = useRef<any>();
   const webViewRef = useRef<WebView>(null);
@@ -164,6 +175,13 @@ function App(): JSX.Element {
           />
         </TouchableWithoutFeedback>
       </ScrollView>
+      <BannerAd
+        unitId={adUnitId}
+        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        onAdFailedToLoad={error => {
+          console.error('Ad failed to load:', error);
+        }}
+      />
     </SafeAreaView>
   );
 }
