@@ -30,6 +30,39 @@ import MessageButton from './Components/MessageButton';
 import {EmailHasPGPKeyType} from './Types';
 
 function App(): JSX.Element {
+  const htmlContent = `
+  <!DOCTYPE html>
+<html>
+  <head>
+    <title>PGP Operations</title>
+    <script src="https://unpkg.com/openpgp/dist/openpgp.min.js"></script>
+    <script>
+      async function encryptMessage(publicKeyArmored, messageText) {
+        console.error('Encrypting message:', messageText);
+        console.error('Using public key:', publicKeyArmored);
+        try {
+          const publicKey = await openpgp.readKey({
+            armoredKey: publicKeyArmored,
+          });
+
+          const encrypted = await openpgp.encrypt({
+            message: await openpgp.createMessage({text: messageText}), // input as Message object
+            encryptionKeys: publicKey,
+          });
+          console.error('Encrypted message:', encrypted);
+          window.ReactNativeWebView.postMessage(encrypted);
+        } catch (e) {
+          console.error('Encryption error:', e);
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({error: e.message}),
+          );
+        }
+      }
+    </script>
+  </head>
+  <body />
+</html>
+  `;
   const adUnitId = 'ca-app-pub-3571877886198893/1120744041';
   const [slideAnim] = useState(new Animated.Value(-200));
   const swipeUpDownRef = useRef<any>();
@@ -95,6 +128,7 @@ function App(): JSX.Element {
   };
 
   const handleMessage = (event: {nativeEvent: {data: any}}) => {
+    console.log('Received message:', event.nativeEvent.data);
     const data = event.nativeEvent.data;
     try {
       if (data.startsWith('-----BEGIN PGP MESSAGE-----')) {
@@ -143,7 +177,8 @@ function App(): JSX.Element {
           </Animated.View>
           <WebView
             ref={webViewRef}
-            source={require('./openpgp.html')}
+            originWhitelist={['*']}
+            source={{html: htmlContent}}
             onMessage={handleMessage}
             javaScriptEnabled
           />
