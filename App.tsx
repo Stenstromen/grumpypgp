@@ -28,41 +28,9 @@ import MessageBody from './Components/MessageBody';
 import EmailAddressInput from './Components/EmailAddress';
 import MessageButton from './Components/MessageButton';
 import {EmailHasPGPKeyType} from './Types';
+import {pgpfunc} from './Util/OpenPGP';
 
 function App(): JSX.Element {
-  const htmlContent = `
-  <!DOCTYPE html>
-<html>
-  <head>
-    <title>PGP Operations</title>
-    <script src="https://unpkg.com/openpgp/dist/openpgp.min.js"></script>
-    <script>
-      async function encryptMessage(publicKeyArmored, messageText) {
-        console.error('Encrypting message:', messageText);
-        console.error('Using public key:', publicKeyArmored);
-        try {
-          const publicKey = await openpgp.readKey({
-            armoredKey: publicKeyArmored,
-          });
-
-          const encrypted = await openpgp.encrypt({
-            message: await openpgp.createMessage({text: messageText}), // input as Message object
-            encryptionKeys: publicKey,
-          });
-          console.error('Encrypted message:', encrypted);
-          window.ReactNativeWebView.postMessage(encrypted);
-        } catch (e) {
-          console.error('Encryption error:', e);
-          window.ReactNativeWebView.postMessage(
-            JSON.stringify({error: e.message}),
-          );
-        }
-      }
-    </script>
-  </head>
-  <body />
-</html>
-  `;
   const adUnitId = 'ca-app-pub-3571877886198893/1120744041';
   const [slideAnim] = useState(new Animated.Value(-200));
   const swipeUpDownRef = useRef<any>();
@@ -73,7 +41,6 @@ function App(): JSX.Element {
   const [emailHasPGPKey, setEmailHasPGPKey] =
     useState<EmailHasPGPKeyType>('standby');
   const isDarkMode = useColorScheme() === 'dark';
-
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#BA8B99' : '#E8CFDA',
   };
@@ -87,7 +54,6 @@ function App(): JSX.Element {
         setEmailHasPGPKey('searching');
         FetchPublicKey(emailAddress).then(key => {
           if (key) {
-            console.log('Fetched public key');
             setEmailHasPGPKey('yes');
             setPublicKey(key);
           } else {
@@ -128,7 +94,6 @@ function App(): JSX.Element {
   };
 
   const handleMessage = (event: {nativeEvent: {data: any}}) => {
-    console.log('Received message:', event.nativeEvent.data);
     const data = event.nativeEvent.data;
     try {
       if (data.startsWith('-----BEGIN PGP MESSAGE-----')) {
@@ -178,7 +143,7 @@ function App(): JSX.Element {
           <WebView
             ref={webViewRef}
             originWhitelist={['*']}
-            source={{html: htmlContent}}
+            source={{html: pgpfunc}}
             onMessage={handleMessage}
             javaScriptEnabled
           />

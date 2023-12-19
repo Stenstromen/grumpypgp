@@ -1,6 +1,5 @@
 async function FetchPublicKey(email: string): Promise<string | null> {
   if (!validateEmail(email)) {
-    console.log('(validateEmail) Invalid email address:', email);
     return null;
   }
   try {
