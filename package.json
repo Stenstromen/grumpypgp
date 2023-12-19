@@ -14,7 +14,6 @@
   "dependencies": {
     "react": "18.2.0",
     "react-native": "0.72.7",
-    "react-native-email": "^2.1.0",
     "react-native-google-mobile-ads": "^12.6.0",
     "react-native-mail": "^6.1.1",
     "react-native-swipe-up-down": "^1.2.0",

@@ -2,28 +2,21 @@
 
 ![Cat](./cat.png)
 
-React Native app for sending encrypted messages using PGP.
+React Native app for sending encrypted emails using PGP.
 
 The lack of a good PGP app for iOS makes the cat grumpy.
 
 *PGP is a standard for encrypting messages using public key cryptography. It's a great way to send secure messages to people without having to worry about the security of the channel you're using to send the message. It's also a great way to store encrypted messages in a database, since the messages can only be decrypted by the intended recipient.*
 
-## Palette
+## External Dependencies
 
-### Light Mode
+- **react-native-mail:** This package provides functionality to compose and send emails within a React Native app. It allows for more advanced features such as adding attachments and customizing the email interface.
 
-* Warm Gray (Lighter): #C0BEBD - A lighter, softer gray for a gentle feel.
-* Soft White (Brighter): #FFFFFF - Bright white for a crisp, clean look.
-* Dark Brown (Softer): #756D67 - A softer, lighter brown that's less intense.
-* Sky Blue (Brighter): #AED3E2 - A brighter, more vibrant sky blue.
-* Muted Pink (Lighter): #E8CFDA - A paler pink for a delicate touch.
-* Black (Softer): #333333 - A softer black, less harsh than pure black.
+- **react-native-swipe-up-down:** A React Native component designed to enable swipe up and swipe down gestures. It's useful for creating interactive interfaces where users can swipe to reveal or hide content.
 
-### Dark Mode
+- **react-native-webview:** This module provides a way to render web content in a React Native app. It's used to embed a web browser view, allowing you to display web pages or run web-based applications within your app.
 
-* Warm Gray (Darker): #7E7C7A - A darker, more intense gray.
-* Soft White (Dulled): #E1E1E1 - A muted white, not as bright, for contrast.
-* Dark Brown (Darker): #3B322C - An even deeper brown for more impact.
-* Sky Blue (Deeper): #5C8CA7 - A deeper shade of blue, more subdued.
-* Muted Pink (Deeper): #BA8B99 - A richer, more pronounced pink.
-* Black (Darker): #000000 - Pure black, providing maximum contrast in dark mode.
+
+## Screenshots
+
+[![Screenshot 1](screenshots/thumbs/one.png)](screenshots/one.png) [![Screenshot 2](screenshots/thumbs/two.png)](screenshots/two.png) [![Screenshot 3](screenshots/thumbs/three.png)](screenshots/three.png) [![Screenshot 4](screenshots/thumbs/four.png)](screenshots/four.png)
